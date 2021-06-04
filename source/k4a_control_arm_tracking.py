@@ -119,7 +119,7 @@ async def manual_controls():
             break
 
     # set the manual control input after arming
-     # ldj
+     #  ldj
     await drone.manual_control.set_manual_control_input(
         float(0), float(0), float(0.5), float(0)
     )
