@@ -130,9 +130,8 @@ async def manual_controls():
 
     # Takeoff the vehicle
     print("-- Taking off")
-    await drone.action.takeoff()
-    await asyncio.sleep(5)
-
+    await drone.action.takeoff()  # ldj
+    await asyncio.sleep(5)  # ldj
 
     # start manual control
     print("-- Starting manual control")
@@ -168,7 +167,10 @@ async def manual_controls():
     #   plot.start()
 
     start_time = pre_cap_time = time.time()
+
     k = 0
+    flag = True
+
     while True:
         # Get capture
         pyK4A.device_get_capture()
@@ -180,6 +182,7 @@ async def manual_controls():
         # Get the depth image from the capture
         depth_image_handle = pyK4A.capture_get_depth_image()
         color_image_handle = pyK4A.capture_get_color_image()
+
 
         # Check the image has been read correctly
         if depth_image_handle and color_image_handle:
@@ -228,7 +231,6 @@ async def manual_controls():
 
             #                combined_image = cv2.addWeighted(depth_color_image, 0.8, body_image_color, 0.2, 0)
 
-            # Draw the skeleton
             for body in pyK4A.body_tracker.bodiesNow:
                 left_wrist = body.skeleton.joints[7]
                 right_wrist = body.skeleton.joints[14]
@@ -243,86 +245,91 @@ async def manual_controls():
                 elbow_left = body.skeleton.joints[6]
 
                 input_index = 0
+                if flag != False:
+                    if handtip_left.position.v[1] < spine_navel.position.v[1] and handtip_right.position.v[1] < spine_navel.position.v[1]:
+                        print('Start Control')
+                        flag = False
+                        # await drone.action.takeoff()
+                else:
+                    if hand_left.confidence_level >= 2:
+                        if hand_left.position.v[0] < spine_navel.position.v[0]:
+                            input_index = 4
+                            print(cur_cap_time - start_time, ':go right!')
 
-                #                       if left_wrist.confidence_level >= 2:
-                #                                  q.put([cur_cap_time-start_time, left_wrist.position.v[0], left_wrist.position.v[1], left_wrist.position.v[2]])
+                        if handtip_left.position.v[0] > elbow_left.position.v[0]:
+                            input_index = 3
+                            print(cur_cap_time - start_time, ':go left!')
 
-                if hand_left.confidence_level >= 2:
-                    if hand_left.position.v[0] < spine_navel.position.v[0]:
-                        input_index = 4
-                        print(cur_cap_time - start_time, ':go right!')
+                        if left_wrist.position.v[1] < neck.position.v[1]:
+                            input_index = 2
+                            print(cur_cap_time - start_time, ': go straight!')
 
-                    if handtip_left.position.v[0] > elbow_left.position.v[0]:
-                        input_index = 3
-                        print(cur_cap_time - start_time, ':go left!')
+                        if left_wrist.position.v[1] > spine_navel.position.v[1]:
+                            input_index = 1
+                            print(cur_cap_time - start_time, ': go back!')
 
-                    if left_wrist.position.v[1] < neck.position.v[1]:
-                        input_index = 2
-                        print(cur_cap_time - start_time, ': go straight!')
+                        if handtip_right.position.v[0] > spine_navel.position.v[0]:
+                            input_index = 5
+                            print(cur_cap_time - start_time, ': pin left!')
 
-                    if left_wrist.position.v[1] > spine_navel.position.v[1]:
-                        input_index = 1
-                        print(cur_cap_time - start_time, ': go back!')
+                    #                                  print(cur_cap_time - start_time, ': left_wrist is left !')
 
-                    if handtip_right.position.v[0] > spine_navel.position.v[0]:
-                        input_index = 5
-                        print(cur_cap_time - start_time, ': pin left!')
+                    #                        if right_wrist.confidence_level >= 2:
+                    #                                  q.put([cur_cap_time-start_time, right_wrist.position.v[0], right_wrist.position.v[1], right_wrist.position.v[2]])
 
-                #                                  print(cur_cap_time - start_time, ': left_wrist is left !')
+                    #                        if head.confidence_level >= 2:
+                    #                                  if right_wrist.position.v[0] > head.position.v[0]:
+                    #                                             print(cur_cap_time - start_time, ': right wrist is lefter than head!')
+                    #                                  if right_wrist.position.v[1] < head.position.v[1]:
+                    #                                             print(cur_cap_time - start_time, ': right wrist is higher than head!')
+                    #                                  if right_wrist.position.v[2] > head.position.v[2]:
+                    #                                             print(cur_cap_time - start_time, ': right wrist is backward than head!')
 
-                #                        if right_wrist.confidence_level >= 2:
-                #                                  q.put([cur_cap_time-start_time, right_wrist.position.v[0], right_wrist.position.v[1], right_wrist.position.v[2]])
+                    if right_wrist.position.v[1] < neck.position.v[1]:
+                        input_index = 7
+                        print(cur_cap_time - start_time, ': go up!')
+                    #  if handtip_right.position.v[0] > spine_navel.position.v[0]:
+                    #           input_index = 3
+                    #           print(cur_cap_time - start_time, ':go left!')
+                    if right_wrist.position.v[1] > spine_navel.position.v[1]:
+                        input_index = 8
+                        print(cur_cap_time - start_time, ': go down!')
+                    if handtip_right.position.v[0] < right_elbow.position.v[0]:
+                        input_index = 6
+                        print(cur_cap_time - start_time, ': pin right!')
+                    #                                   print(cur_cap_time - start_time, ': right wrist is lower than navel!')
 
-                #                        if head.confidence_level >= 2:
-                #                                  if right_wrist.position.v[0] > head.position.v[0]:
-                #                                             print(cur_cap_time - start_time, ': right wrist is lefter than head!')
-                #                                  if right_wrist.position.v[1] < head.position.v[1]:
-                #                                             print(cur_cap_time - start_time, ': right wrist is higher than head!')
-                #                                  if right_wrist.position.v[2] > head.position.v[2]:
-                #                                             print(cur_cap_time - start_time, ': right wrist is backward than head!')
+                    #                                   if right_shoulder.confidence_level >= 2 and right_elbow.confidence_level >= 2:
+                    #                                              right_arm_angle = calc_angle(right_shoulder.position.v, right_elbow.position.v, right_wrist.position.v)
+                    #                                              right_arm_angle = calc_angle(right_shoulder.position.xyz, right_elbow.position.xyz, right_wrist.position.xyz)
+                    #                                              print(cur_cap_time - start_time, ': angle of right arm is', right_arm_angle)
 
-                if right_wrist.position.v[1] < neck.position.v[1]:
-                    input_index = 7
-                    print(cur_cap_time - start_time, ': go up!')
-              #  if handtip_right.position.v[0] > spine_navel.position.v[0]:
-             #           input_index = 3
-             #           print(cur_cap_time - start_time, ':go left!')
-                if right_wrist.position.v[1] > spine_navel.position.v[1]:
-                    input_index = 8
-                    print(cur_cap_time - start_time, ': go down!')
-                if handtip_right.position.v[0] < right_elbow.position.v[0]:
-                    input_index = 6
-                    print(cur_cap_time - start_time, ': pin right!')
-                #                                   print(cur_cap_time - start_time, ': right wrist is lower than navel!')
+                    # grabs a random input from the test list
+                    # WARNING - your simulation vehicle may crash if its unlucky enough
+                    input_list = manual_inputs[input_index]
 
-                #                                   if right_shoulder.confidence_level >= 2 and right_elbow.confidence_level >= 2:
-                #                                              right_arm_angle = calc_angle(right_shoulder.position.v, right_elbow.position.v, right_wrist.position.v)
-                #                                              right_arm_angle = calc_angle(right_shoulder.position.xyz, right_elbow.position.xyz, right_wrist.position.xyz)
-                #                                              print(cur_cap_time - start_time, ': angle of right arm is', right_arm_angle)
+                    # get current state of roll axis (between -1 and 1)
+                    roll = float(input_list[0])
+                    # get current state of pitch axis (between -1 and 1)
+                    pitch = float(input_list[1])
+                    # get current state of throttle axis (between -1 and 1, but between 0 and 1 is expected)
+                    throttle = float(input_list[2])
+                    # get current state of yaw axis (between -1 and 1)
+                    yaw = float(input_list[3])
 
-                # grabs a random input from the test list
-                # WARNING - your simulation vehicle may crash if its unlucky enough
-                input_list = manual_inputs[input_index]
+                    await drone.manual_control.set_manual_control_input(roll, pitch, throttle, yaw)
+                    await asyncio.sleep(0.1)
 
-                # get current state of roll axis (between -1 and 1)
-                roll = float(input_list[0])
-                # get current state of pitch axis (between -1 and 1)
-                pitch = float(input_list[1])
-                # get current state of throttle axis (between -1 and 1, but between 0 and 1 is expected)
-                throttle = float(input_list[2])
-                # get current state of yaw axis (between -1 and 1)
-                yaw = float(input_list[3])
 
-                await drone.manual_control.set_manual_control_input(roll, pitch, throttle, yaw)
 
-                await asyncio.sleep(0.1)
 
-               # skeleton2D_onColor = pyK4A.bodyTracker_project_skeleton_on_color(body.skeleton)
+                # skeleton2D_onColor = pyK4A.bodyTracker_project_skeleton_on_color(body.skeleton)
                 skeleton2D_onColor = pyK4A.bodyTracker_project_skeleton(body.skeleton,
                                                                         dest_camera=_k4a.K4A_CALIBRATION_TYPE_COLOR)
                 color_image = pyK4A.body_tracker.draw2DSkeleton(skeleton2D_onColor, body.id, color_image)
 
                 # Overlay body segmentation on depth image
+
             #                       cv2.imshow('Segmented Depth Image', combined_image)
             #                       cv2.imshow('Segmented Depth Image', depth_color_image)
 
