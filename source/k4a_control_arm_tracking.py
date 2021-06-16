@@ -129,13 +129,13 @@ async def manual_controls():
     await drone.action.arm()
 
     # Takeoff the vehicle
-    print("-- Taking off")
-    await drone.action.takeoff()  # ldj
-    await asyncio.sleep(5)  # ldj
+    #print("-- Taking off")
+    #await drone.action.takeoff()  # ldj
+    #await asyncio.sleep(5)  # ldj
 
     # start manual control
-    print("-- Starting manual control")
-    await drone.manual_control.start_position_control()
+    #print("-- Starting manual control")
+    #await drone.manual_control.start_position_control()
 
     # skeleton code start ldj
     pyK4A = pyKinectAzure(modulePath)
@@ -249,7 +249,13 @@ async def manual_controls():
                     if handtip_left.position.v[1] < spine_navel.position.v[1] and handtip_right.position.v[1] < spine_navel.position.v[1]:
                         print('Start Control')
                         flag = False
-                        # await drone.action.takeoff()
+                        print('Take 0ff')
+                        await drone.action.takeoff()
+                        await asyncio.sleep(5)      # need to next takeoff code
+
+                        print("-- Starting manual control --")
+                        await drone.manual_control.start_position_control()
+
                 else:
                     if hand_left.confidence_level >= 2:
                         if hand_left.position.v[0] < spine_navel.position.v[0]:
@@ -271,19 +277,6 @@ async def manual_controls():
                         if handtip_right.position.v[0] > spine_navel.position.v[0]:
                             input_index = 5
                             print(cur_cap_time - start_time, ': pin left!')
-
-                    #                                  print(cur_cap_time - start_time, ': left_wrist is left !')
-
-                    #                        if right_wrist.confidence_level >= 2:
-                    #                                  q.put([cur_cap_time-start_time, right_wrist.position.v[0], right_wrist.position.v[1], right_wrist.position.v[2]])
-
-                    #                        if head.confidence_level >= 2:
-                    #                                  if right_wrist.position.v[0] > head.position.v[0]:
-                    #                                             print(cur_cap_time - start_time, ': right wrist is lefter than head!')
-                    #                                  if right_wrist.position.v[1] < head.position.v[1]:
-                    #                                             print(cur_cap_time - start_time, ': right wrist is higher than head!')
-                    #                                  if right_wrist.position.v[2] > head.position.v[2]:
-                    #                                             print(cur_cap_time - start_time, ': right wrist is backward than head!')
 
                     if right_wrist.position.v[1] < neck.position.v[1]:
                         input_index = 7
