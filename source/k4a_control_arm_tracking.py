@@ -231,109 +231,119 @@ async def manual_controls():
 
             #                combined_image = cv2.addWeighted(depth_color_image, 0.8, body_image_color, 0.2, 0)
 
-            for body in pyK4A.body_tracker.bodiesNow:
-                left_wrist = body.skeleton.joints[7]
-                right_wrist = body.skeleton.joints[14]
-                head = body.skeleton.joints[26]
-                right_shoulder = body.skeleton.joints[12]
-                right_elbow = body.skeleton.joints[13]
+####
+            for i, body in enumerate(pyK4A.body_tracker.bodiesNow):
                 neck = body.skeleton.joints[3]
-                spine_navel = body.skeleton.joints[1]
-                hand_left = body.skeleton.joints[8]
-                handtip_left = body.skeleton.joints[9]
-                handtip_right = body.skeleton.joints[16]
-                elbow_left = body.skeleton.joints[6]
-
-                input_index = 0
-                if flag != False:
-                    if handtip_left.position.v[1] < spine_navel.position.v[1] and handtip_right.position.v[1] < spine_navel.position.v[1]:
-                        print('Start Control')
-                        flag = False
-                        print('Take 0ff')
-                        await drone.action.takeoff()
-                        await asyncio.sleep(5)      # need to next takeoff code
-
-                        print("-- Starting manual control --")
-                        await drone.manual_control.start_position_control()
-
+                if i == 0:
+                    min_idx = 0
+                    min_neck = neck
                 else:
-                    move_hand_time = time.time()
-                    if handtip_left.position.v[1] > spine_navel.position.v[1] and handtip_right.position.v[1] > \
-                            spine_navel.position.v[1]:
-                        flag = True
-                        await drone.action.land()
-                        print('Drone Land')
-                        await asyncio.sleep(5)
+                    if neck.position.v[2] < min_neck.position.v[2]:
+                        min_idx = i
+                        min_neck = neck
 
-                    if hand_left.confidence_level >= 2:
-                        if hand_left.position.v[0] < spine_navel.position.v[0]:
-                            input_index = 4
-                            print(cur_cap_time - start_time, ': go right!', move_hand_time - cur_cap_time)
+            body = pyK4A.body_tracker.bodiesNow[min_idx]
 
-                        if handtip_left.position.v[0] > elbow_left.position.v[0]:
-                            input_index = 3
-                            print(cur_cap_time - start_time, ': go left!', move_hand_time - cur_cap_time)
+            left_wrist = body.skeleton.joints[7]
+            right_wrist = body.skeleton.joints[14]
+            head = body.skeleton.joints[26]
+            right_shoulder = body.skeleton.joints[12]
+            right_elbow = body.skeleton.joints[13]
+            neck = body.skeleton.joints[3]
+            spine_navel = body.skeleton.joints[1]
+            hand_left = body.skeleton.joints[8]
+            handtip_left = body.skeleton.joints[9]
+            handtip_right = body.skeleton.joints[16]
+            elbow_left = body.skeleton.joints[6]
 
-                        if left_wrist.position.v[1] < neck.position.v[1]:
-                            input_index = 2
-                            print(cur_cap_time - start_time, ': go straight!', move_hand_time - cur_cap_time)
+            input_index = 0
 
-                        if left_wrist.position.v[1] > spine_navel.position.v[1]:
-                            input_index = 1
-                            print(cur_cap_time - start_time, ': go back!', move_hand_time - cur_cap_time)
+            if flag != False:
+                if handtip_left.position.v[1] < spine_navel.position.v[1] and handtip_right.position.v[1] < \
+                        spine_navel.position.v[1]:
+                    print('Start Control')
+                    flag = False
+                    print('Take 0ff')
+                    await drone.action.takeoff()
+                    await asyncio.sleep(5)  # need to next takeoff code
 
-                        if handtip_right.position.v[0] > spine_navel.position.v[0]:
-                            input_index = 5
-                            print(cur_cap_time - start_time, ': pin left!', move_hand_time - cur_cap_time)
+                    print("-- Starting manual control --")
+                    await drone.manual_control.start_position_control()
 
-                    if right_wrist.position.v[1] < neck.position.v[1]:
-                        input_index = 7
-                        print(cur_cap_time - start_time, ': go up!', move_hand_time - cur_cap_time)
-                    #  if handtip_right.position.v[0] > spine_navel.position.v[0]:
-                    #           input_index = 3
-                    #           print(cur_cap_time - start_time, ':go left!')
-                    if right_wrist.position.v[1] > spine_navel.position.v[1]:
-                        input_index = 8
-                        print(cur_cap_time - start_time, ': go down!',move_hand_time - cur_cap_time)
-                    if handtip_right.position.v[0] < right_elbow.position.v[0]:
-                        input_index = 6
-                        print(cur_cap_time - start_time, ': pin right!', move_hand_time - cur_cap_time)
-                    #                                   print(cur_cap_time - start_time, ': right wrist is lower than navel!')
+            else:
+                move_hand_time = time.time()
+                if handtip_left.position.v[1] > spine_navel.position.v[1] and handtip_right.position.v[1] > \
+                        spine_navel.position.v[1]:
+                    flag = True
+                    await drone.action.land()
+                    print('Drone Land')
+                    await asyncio.sleep(5)
 
-                    #                                   if right_shoulder.confidence_level >= 2 and right_elbow.confidence_level >= 2:
-                    #                                              right_arm_angle = calc_angle(right_shoulder.position.v, right_elbow.position.v, right_wrist.position.v)
-                    #                                              right_arm_angle = calc_angle(right_shoulder.position.xyz, right_elbow.position.xyz, right_wrist.position.xyz)
-                    #                                              print(cur_cap_time - start_time, ': angle of right arm is', right_arm_angle)
+                if hand_left.confidence_level >= 2:
+                    if hand_left.position.v[0] < spine_navel.position.v[0]:
+                        input_index = 4
+                        print(cur_cap_time - start_time, ': go right!', move_hand_time - cur_cap_time)
 
-                    # grabs a random input from the test list
-                    # WARNING - your simulation vehicle may crash if its unlucky enough
-                    input_list = manual_inputs[input_index]
+                    if handtip_left.position.v[0] > elbow_left.position.v[0]:
+                        input_index = 3
+                        print(cur_cap_time - start_time, ': go left!', move_hand_time - cur_cap_time)
 
-                    # get current state of roll axis (between -1 and 1)
-                    roll = float(input_list[0])
-                    # get current state of pitch axis (between -1 and 1)
-                    pitch = float(input_list[1])
-                    # get current state of throttle axis (between -1 and 1, but between 0 and 1 is expected)
-                    throttle = float(input_list[2])
-                    # get current state of yaw axis (between -1 and 1)
-                    yaw = float(input_list[3])
+                    if left_wrist.position.v[1] < neck.position.v[1]:
+                        input_index = 2
+                        print(cur_cap_time - start_time, ': go straight!', move_hand_time - cur_cap_time)
 
-                    await drone.manual_control.set_manual_control_input(roll, pitch, throttle, yaw)
-                    # print time deley
-                    move_drone_time = time.time()
-                    if input_index != 0:
-                        print(move_drone_time - move_hand_time, ' : move drone delay')
-                    await asyncio.sleep(0.1)
+                    if left_wrist.position.v[1] > spine_navel.position.v[1]:
+                        input_index = 1
+                        print(cur_cap_time - start_time, ': go back!', move_hand_time - cur_cap_time)
 
+                    if handtip_right.position.v[0] > spine_navel.position.v[0]:
+                        input_index = 5
+                        print(cur_cap_time - start_time, ': pin left!', move_hand_time - cur_cap_time)
 
+                if right_wrist.position.v[1] < neck.position.v[1]:
+                    input_index = 7
+                    print(cur_cap_time - start_time, ': go up!', move_hand_time - cur_cap_time)
+                #  if handtip_right.position.v[0] > spine_navel.position.v[0]:
+                #           input_index = 3
+                #           print(cur_cap_time - start_time, ':go left!')
+                if right_wrist.position.v[1] > spine_navel.position.v[1]:
+                    input_index = 8
+                    print(cur_cap_time - start_time, ': go down!', move_hand_time - cur_cap_time)
+                if handtip_right.position.v[0] < right_elbow.position.v[0]:
+                    input_index = 6
+                    print(cur_cap_time - start_time, ': pin right!', move_hand_time - cur_cap_time)
+                #                                   print(cur_cap_time - start_time, ': right wrist is lower than navel!')
 
+                #                                   if right_shoulder.confidence_level >= 2 and right_elbow.confidence_level >= 2:
+                #                                              right_arm_angle = calc_angle(right_shoulder.position.v, right_elbow.position.v, right_wrist.position.v)
+                #                                              right_arm_angle = calc_angle(right_shoulder.position.xyz, right_elbow.position.xyz, right_wrist.position.xyz)
+                #                                              print(cur_cap_time - start_time, ': angle of right arm is', right_arm_angle)
 
-                # skeleton2D_onColor = pyK4A.bodyTracker_project_skeleton_on_color(body.skeleton)
-                skeleton2D_onColor = pyK4A.bodyTracker_project_skeleton(body.skeleton,
-                                                                        dest_camera=_k4a.K4A_CALIBRATION_TYPE_COLOR)
-                color_image = pyK4A.body_tracker.draw2DSkeleton(skeleton2D_onColor, body.id, color_image)
+                # grabs a random input from the test list
+                # WARNING - your simulation vehicle may crash if its unlucky enough
+                input_list = manual_inputs[input_index]
 
-                # Overlay body segmentation on depth image
+                # get current state of roll axis (between -1 and 1)
+                roll = float(input_list[0])
+                # get current state of pitch axis (between -1 and 1)
+                pitch = float(input_list[1])
+                # get current state of throttle axis (between -1 and 1, but between 0 and 1 is expected)
+                throttle = float(input_list[2])
+                # get current state of yaw axis (between -1 and 1)
+                yaw = float(input_list[3])
+
+                await drone.manual_control.set_manual_control_input(roll, pitch, throttle, yaw)
+                # print time deley
+                move_drone_time = time.time()
+                if input_index != 0:
+                    print(move_drone_time - move_hand_time, ' : move drone delay')
+                await asyncio.sleep(0.1)
+
+            ####
+            skeleton2D_onColor = pyK4A.bodyTracker_project_skeleton(body.skeleton,
+                                                                    dest_camera=_k4a.K4A_CALIBRATION_TYPE_COLOR)
+            color_image = pyK4A.body_tracker.draw2DSkeleton(skeleton2D_onColor, body.id, color_image)
+
 
             #                       cv2.imshow('Segmented Depth Image', combined_image)
             #                       cv2.imshow('Segmented Depth Image', depth_color_image)
@@ -353,7 +363,7 @@ async def manual_controls():
             pyK4A.image_release(pyK4A.body_tracker.segmented_body_img)
 
             pyK4A.body_tracker.release_frame()
-            #
+            #q
             # k4abt_tracker_pop_result() 함수에서 body_frame_handle 사용.
             # Once body_frame data is read, the user must call k4abt_frame_release() to return the allocated memory to the SDK.
             #
@@ -367,6 +377,113 @@ async def manual_controls():
 
     pyK4A.device_stop_cameras()
     pyK4A.device_close()
+
+    '''
+                for body in pyK4A.body_tracker.bodiesNow:
+                    left_wrist = body.skeleton.joints[7]
+                    right_wrist = body.skeleton.joints[14]
+                    head = body.skeleton.joints[26]
+                    right_shoulder = body.skeleton.joints[12]
+                    right_elbow = body.skeleton.joints[13]
+                    neck = body.skeleton.joints[3]
+                    spine_navel = body.skeleton.joints[1]
+                    hand_left = body.skeleton.joints[8]
+                    handtip_left = body.skeleton.joints[9]
+                    handtip_right = body.skeleton.joints[16]
+                    elbow_left = body.skeleton.joints[6]
+
+                    input_index = 0
+                    if neck.position.v[2] < 1000 and neck.position.v[2] > 400:
+                        if flag != False:
+                            if handtip_left.position.v[1] < spine_navel.position.v[1] and handtip_right.position.v[1] < spine_navel.position.v[1]:
+                                print('Start Control')
+                                flag = False
+                                print('Take 0ff')
+                                await drone.action.takeoff()
+                                await asyncio.sleep(5)      # need to next takeoff code
+
+                                print("-- Starting manual control --")
+                                await drone.manual_control.start_position_control()
+
+                        else:
+                            move_hand_time = time.time()
+                            if handtip_left.position.v[1] > spine_navel.position.v[1] and handtip_right.position.v[1] > \
+                                    spine_navel.position.v[1]:
+                                flag = True
+                                await drone.action.land()
+                                print('Drone Land')
+                                await asyncio.sleep(5)
+
+                            if hand_left.confidence_level >= 2:
+                                if hand_left.position.v[0] < spine_navel.position.v[0]:
+                                    input_index = 4
+                                    print(cur_cap_time - start_time, ': go right!', move_hand_time - cur_cap_time)
+
+                                if handtip_left.position.v[0] > elbow_left.position.v[0]:
+                                    input_index = 3
+                                    print(cur_cap_time - start_time, ': go left!', move_hand_time - cur_cap_time)
+
+                                if left_wrist.position.v[1] < neck.position.v[1]:
+                                    input_index = 2
+                                    print(cur_cap_time - start_time, ': go straight!', move_hand_time - cur_cap_time)
+
+                                if left_wrist.position.v[1] > spine_navel.position.v[1]:
+                                    input_index = 1
+                                    print(cur_cap_time - start_time, ': go back!', move_hand_time - cur_cap_time)
+
+                                if handtip_right.position.v[0] > spine_navel.position.v[0]:
+                                    input_index = 5
+                                    print(cur_cap_time - start_time, ': pin left!', move_hand_time - cur_cap_time)
+
+                            if right_wrist.position.v[1] < neck.position.v[1]:
+                                input_index = 7
+                                print(cur_cap_time - start_time, ': go up!', move_hand_time - cur_cap_time)
+                            #  if handtip_right.position.v[0] > spine_navel.position.v[0]:
+                            #           input_index = 3
+                            #           print(cur_cap_time - start_time, ':go left!')
+                            if right_wrist.position.v[1] > spine_navel.position.v[1]:
+                                input_index = 8
+                                print(cur_cap_time - start_time, ': go down!',move_hand_time - cur_cap_time)
+                            if handtip_right.position.v[0] < right_elbow.position.v[0]:
+                                input_index = 6
+                                print(cur_cap_time - start_time, ': pin right!', move_hand_time - cur_cap_time)
+                            #                                   print(cur_cap_time - start_time, ': right wrist is lower than navel!')
+
+                            #                                   if right_shoulder.confidence_level >= 2 and right_elbow.confidence_level >= 2:
+                            #                                              right_arm_angle = calc_angle(right_shoulder.position.v, right_elbow.position.v, right_wrist.position.v)
+                            #                                              right_arm_angle = calc_angle(right_shoulder.position.xyz, right_elbow.position.xyz, right_wrist.position.xyz)
+                            #                                              print(cur_cap_time - start_time, ': angle of right arm is', right_arm_angle)
+
+                            # grabs a random input from the test list
+                            # WARNING - your simulation vehicle may crash if its unlucky enough
+                            input_list = manual_inputs[input_index]
+
+                            # get current state of roll axis (between -1 and 1)
+                            roll = float(input_list[0])
+                            # get current state of pitch axis (between -1 and 1)
+                            pitch = float(input_list[1])
+                            # get current state of throttle axis (between -1 and 1, but between 0 and 1 is expected)
+                            throttle = float(input_list[2])
+                            # get current state of yaw axis (between -1 and 1)
+                            yaw = float(input_list[3])
+
+                            await drone.manual_control.set_manual_control_input(roll, pitch, throttle, yaw)
+                            # print time deley
+                            move_drone_time = time.time()
+                            if input_index != 0:
+                                print(move_drone_time - move_hand_time, ' : move drone delay')
+                            await asyncio.sleep(0.1)
+
+
+
+
+                    # skeleton2D_onColor = pyK4A.bodyTracker_project_skeleton_on_color(body.skeleton)
+                    skeleton2D_onColor = pyK4A.bodyTracker_project_skeleton(body.skeleton,
+                                                                            dest_camera=_k4a.K4A_CALIBRATION_TYPE_COLOR)
+                    color_image = pyK4A.body_tracker.draw2DSkeleton(skeleton2D_onColor, body.id, color_image)
+
+                    # Overlay body segmentation on depth image
+    '''
 
 #
 if __name__ == "__main__":
