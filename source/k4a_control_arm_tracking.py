@@ -109,7 +109,7 @@ async def manual_controls():
     # This waits till a mavlink based drone is connected
     async for state in drone.core.connection_state():
         if state.is_connected:
-            print(f"-- Connected to drone with UUID: {state.uuid}")
+            print("-- Connected to drone with UUID:")
             break
 
     # Checking if Global Position Estimate is ok
@@ -282,36 +282,44 @@ async def manual_controls():
                 if hand_left.confidence_level >= 2:
                     if hand_left.position.v[0] < spine_navel.position.v[0]:
                         input_index = 4
-                        print(cur_cap_time - start_time, ': go right!', move_hand_time - cur_cap_time)
+                        print(cur_cap_time - start_time, ': go right!')
+                        #print(cur_cap_time - start_time, ': go right!', move_hand_time - cur_cap_time)
 
                     if handtip_left.position.v[0] > elbow_left.position.v[0]:
                         input_index = 3
-                        print(cur_cap_time - start_time, ': go left!', move_hand_time - cur_cap_time)
+                        print(cur_cap_time - start_time, ': go left!')
+                        #print(cur_cap_time - start_time, ': go left!', move_hand_time - cur_cap_time)
 
                     if left_wrist.position.v[1] < neck.position.v[1]:
                         input_index = 2
-                        print(cur_cap_time - start_time, ': go straight!', move_hand_time - cur_cap_time)
+                        print(cur_cap_time - start_time, ': go straight!')
+                        #print(cur_cap_time - start_time, ': go straight!', move_hand_time - cur_cap_time)
 
                     if left_wrist.position.v[1] > spine_navel.position.v[1]:
                         input_index = 1
-                        print(cur_cap_time - start_time, ': go back!', move_hand_time - cur_cap_time)
+                        print(cur_cap_time - start_time, ': go back!')
+                        #print(cur_cap_time - start_time, ': go back!', move_hand_time - cur_cap_time)
 
                     if handtip_right.position.v[0] > spine_navel.position.v[0]:
                         input_index = 5
-                        print(cur_cap_time - start_time, ': pin left!', move_hand_time - cur_cap_time)
+                        print(cur_cap_time - start_time, ': pin left!')
+                        #print(cur_cap_time - start_time, ': pin left!', move_hand_time - cur_cap_time)
 
                 if right_wrist.position.v[1] < neck.position.v[1]:
                     input_index = 7
-                    print(cur_cap_time - start_time, ': go up!', move_hand_time - cur_cap_time)
+                    print(cur_cap_time - start_time, ': go up!')
+                    #print(cur_cap_time - start_time, ': go up!', move_hand_time - cur_cap_time)
                 #  if handtip_right.position.v[0] > spine_navel.position.v[0]:
                 #           input_index = 3
                 #           print(cur_cap_time - start_time, ':go left!')
                 if right_wrist.position.v[1] > spine_navel.position.v[1]:
                     input_index = 8
-                    print(cur_cap_time - start_time, ': go down!', move_hand_time - cur_cap_time)
+                    print(cur_cap_time - start_time, ': go down!')
+                    #print(cur_cap_time - start_time, ': go down!', move_hand_time - cur_cap_time)
                 if handtip_right.position.v[0] < right_elbow.position.v[0]:
                     input_index = 6
-                    print(cur_cap_time - start_time, ': pin right!', move_hand_time - cur_cap_time)
+                    print(cur_cap_time - start_time, ': pin right!')
+                    #print(cur_cap_time - start_time, ': pin right!', move_hand_time - cur_cap_time)
                 #                                   print(cur_cap_time - start_time, ': right wrist is lower than navel!')
 
                 #                                   if right_shoulder.confidence_level >= 2 and right_elbow.confidence_level >= 2:
